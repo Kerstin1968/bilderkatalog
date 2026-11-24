@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bilderkatalog">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f6f3ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<title>Bilderkatalog</title>
+<style>
+:root{
+  --bg:#f6f3ee; --card:#ffffff; --ink:#26221d; --muted:#7a7268; --line:#e4ddd2;
+  --accent:#9a4a2b; --accent-ink:#fff; --ok:#2f7a4a; --sold:#9a4a2b; --soft:#efe8dd;
+  --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1b1917; --card:#26231f; --ink:#f1ece4; --muted:#a89f93; --line:#3a352f;
+    --accent:#d9825a; --accent-ink:#1b1917; --ok:#6cc08b; --sold:#e0916b; --soft:#2f2b26; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.25rem;margin:0;flex:1;font-weight:650;letter-spacing:.2px}
+main{max-width:860px;margin:0 auto;padding:16px 16px calc(100px + env(safe-area-inset-bottom))}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.danger{color:#b3261e;border-color:#e3b3ae}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn:disabled{opacity:.45;cursor:default}
+.iconbtn{border:none;background:transparent;font-size:1.4rem;padding:6px 8px;cursor:pointer;border-radius:8px}
+.fab{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:6;
+  background:var(--accent);color:var(--accent-ink);border:none;border-radius:999px;padding:14px 20px;
+  font-weight:650;box-shadow:var(--shadow);cursor:pointer;font-size:1rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input,.toolbar select{flex:1 1 160px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+.stats{color:var(--muted);font-size:.9rem;margin:0 2px 12px}
+.list{display:grid;gap:10px}
+.item{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px;cursor:pointer;box-shadow:var(--shadow);text-align:left;width:100%}
+.thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;background:var(--soft);flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:1.6rem}
+.item .meta{flex:1;min-width:0}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{color:var(--muted);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-block;font-size:.75rem;padding:2px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.badge.verkauft{color:var(--sold)} .badge.verfuegbar{color:var(--ok)}
+.empty{text-align:center;color:var(--muted);padding:50px 10px}
+.empty .big{font-size:3rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.detail img.hero{width:100%;max-height:60vh;object-fit:contain;background:var(--soft);border-radius:var(--radius);display:block;margin-bottom:14px}
+dl.fields{display:grid;grid-template-columns:minmax(110px,38%) 1fr;gap:8px 14px;margin:0}
+dl.fields dt{color:var(--muted)} dl.fields dd{margin:0;word-break:break-word}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+/* Wizard */
+.progress{height:6px;background:var(--soft);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.progress div{height:100%;background:var(--accent);transition:width .25s}
+.stepinfo{color:var(--muted);font-size:.85rem;margin-bottom:14px}
+.wiz h2{margin:0 0 4px;font-size:1.3rem}
+.wiz p.hint{color:var(--muted);margin:0 0 16px}
+label.f{display:block;font-weight:600;margin:14px 0 6px}
+label.f small{font-weight:400;color:var(--muted)}
+.wiz input[type=text],.wiz input[type=number],.wiz select,.wiz textarea{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.wiz textarea{min-height:90px;resize:vertical}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.9rem}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600}
+.seg button.on{border-color:var(--accent);color:var(--accent)}
+.photo-drop{display:block;border:2px dashed var(--line);border-radius:var(--radius);padding:18px;text-align:center;cursor:pointer;background:var(--bg)}
+.photo-drop img{max-width:100%;max-height:45vh;border-radius:10px;display:block;margin:0 auto 10px}
+.wiznav{display:flex;gap:8px;margin-top:22px}
+.wiznav .btn{flex:1;padding:13px}
+.err{color:#b3261e;font-size:.9rem;margin-top:8px;min-height:1em}
+.summary dl.fields dd a{color:var(--accent);margin-left:6px;font-size:.85rem;cursor:pointer;text-decoration:underline}
+.note{background:var(--soft);border-radius:10px;padding:12px 14px;font-size:.92rem;margin:12px 0}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);
+  padding:10px 16px;border-radius:10px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+h3{margin:22px 0 8px;font-size:1.05rem}
+.login{max-width:420px;margin:40px auto}
+.login input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.login .btn{width:100%;padding:13px;margin-top:18px}
+.busy{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:30;display:flex;align-items:center;justify-content:center}
+.busy div{background:var(--card);padding:18px 22px;border-radius:12px;box-shadow:var(--shadow);max-width:85vw;text-align:center}
+@media (max-width:480px){ dl.fields{grid-template-columns:1fr;gap:2px} dl.fields dd{margin-bottom:8px} }
+</style>
+</head>
+<body>
+<header>
+  <button class="iconbtn hidden" id="backBtn" aria-label="Zurück">‹</button>
+  <h1 id="title">Bilderkatalog</h1>
+  <button class="iconbtn" id="settingsBtn" aria-label="Datensicherung und Einstellungen" title="Datensicherung">⚙︎</button>
+</header>
+<main id="view"></main>
+<button class="fab" id="addBtn">＋ Neues Bild</button>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept="application/json,.json" class="hidden">
+<div class="busy hidden" id="busy"><div id="busyText">Bitte warten …</div></div>
+
+<script src="config.js"></script>
+<script src="supabase.js"></script>
+<script>
+"use strict";
+/* ================= Online-Datenbank (Supabase) ================= */
+const CFG = window.BILDERKATALOG_CONFIG || {};
+const sb = (CFG.url && CFG.key && window.supabase) ? window.supabase.createClient(CFG.url, CFG.key, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+}) : null;
+const BUCKET = "fotos";
+let user = null;
+
+/* Umrechnung zwischen Datenbank-Spalten und den Feldern der App */
+const numOrNull = v => (v === "" || v == null || isNaN(Number(String(v).replace(",", ".")))) ? null : Number(String(v).replace(",", "."));
+const str = v => (v == null ? "" : String(v));
+function fromRow(r){
+  return { id:r.id, werknummer:str(r.werknummer), titel:str(r.titel), kuenstler:str(r.kuenstler), jahr:str(r.jahr),
+    hoehe:str(r.hoehe), breite:str(r.breite), tiefe:str(r.tiefe), technik:str(r.technik), untergrund:str(r.untergrund),
+    materialien:str(r.materialien), signaturPos:str(r.signatur_pos), signatur:str(r.signatur), status:r.status || "verfuegbar",
+    preis:str(r.preis), besitzer:str(r.besitzer), notizen:str(r.notizen), foto_pfad:r.foto_pfad || null, thumb_pfad:r.thumb_pfad || null,
+    erstellt:r.erstellt, geaendert:r.geaendert };
+}
+function toRow(w){
+  return { id:w.id, werknummer:str(w.werknummer).trim(), titel:str(w.titel), kuenstler:str(w.kuenstler),
+    jahr: numOrNull(w.jahr) == null ? null : Math.round(numOrNull(w.jahr)),
+    hoehe:numOrNull(w.hoehe), breite:numOrNull(w.breite), tiefe:numOrNull(w.tiefe), technik:str(w.technik), untergrund:str(w.untergrund),
+    materialien:str(w.materialien), signatur_pos:str(w.signaturPos), signatur:str(w.signatur), status: w.status === "verkauft" ? "verkauft" : "verfuegbar",
+    preis:numOrNull(w.preis), besitzer:str(w.besitzer), notizen:str(w.notizen), foto_pfad:w.foto_pfad || null, thumb_pfad:w.thumb_pfad || null,
+    erstellt: w.erstellt || new Date().toISOString(), geaendert: w.geaendert || new Date().toISOString() };
+}
+function dbErr(error){
+  const m = (error && (error.message || error.error_description)) || String(error);
+  if (/duplicate key|werknummer_eindeutig/i.test(m)) return "Diese Werknummer ist schon vergeben.";
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return "Keine Internetverbindung oder die Datenbank ist gerade nicht erreichbar.";
+  if (/JWT|not authorized|row-level security|permission/i.test(m)) return "Keine Berechtigung – bitte neu anmelden.";
+  return m;
+}
+async function getAll(){
+  const { data, error } = await sb.from("werke").select("*");
+  if (error) throw new Error(dbErr(error));
+  const list = data.map(fromRow);
+  // Vorschaubilder: zeitlich begrenzte, private Links (24 Stunden)
+  const paths = list.map(w => w.thumb_pfad).filter(Boolean);
+  if (paths.length){
+    for (let i = 0; i < paths.length; i += 500){
+      const { data: urls } = await sb.storage.from(BUCKET).createSignedUrls(paths.slice(i, i+500), 86400);
+      (urls || []).forEach(u => { if (u.signedUrl) signedCache.set(u.path, u.signedUrl); });
+    }
+  }
+  list.forEach(w => { w._thumbURL = w.thumb_pfad ? signedCache.get(w.thumb_pfad) || "" : ""; });
+  return list;
+}
+const signedCache = new Map();
+async function signedURL(path){
+  if (!path) return "";
+  if (signedCache.has(path)) return signedCache.get(path);
+  const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(path, 86400);
+  if (error) return "";
+  signedCache.set(path, data.signedUrl); return data.signedUrl;
+}
+async function uploadBlob(path, blob){
+  const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType:"image/jpeg", upsert:true, cacheControl:"31536000" });
+  if (error) throw new Error("Foto konnte nicht hochgeladen werden: " + dbErr(error));
+}
+async function removeFiles(paths){
+  paths = paths.filter(Boolean); if (!paths.length) return;
+  try { await sb.storage.from(BUCKET).remove(paths); } catch(_){}
+}
+/* Speichert ein Werk. foto/thumb (Blob) nur, wenn ein neues Foto gewählt wurde; fotoWeg = Foto entfernen */
+async function putWerk(w, {foto=null, thumb=null, fotoWeg=false} = {}){
+  const alt = [w.foto_pfad, w.thumb_pfad];
+  let neuePfade = [];
+  if (foto){
+    const stamp = Date.now().toString(36);
+    const fp = `${user.id}/${w.id}-${stamp}.jpg`, tp = `${user.id}/${w.id}-${stamp}-klein.jpg`;
+    await uploadBlob(fp, foto);
+    if (thumb) await uploadBlob(tp, thumb);
+    w.foto_pfad = fp; w.thumb_pfad = thumb ? tp : null; neuePfade = [fp, tp];
+  } else if (fotoWeg){ w.foto_pfad = null; w.thumb_pfad = null; }
+  const { error } = await sb.from("werke").upsert({ ...toRow(w), user_id: user.id });
+  if (error){ if (foto) await removeFiles(neuePfade); throw new Error(dbErr(error)); }
+  if (foto || fotoWeg) await removeFiles(alt.filter(p => p && p !== w.foto_pfad && p !== w.thumb_pfad));
+}
+async function delWerk(w){
+  const { error } = await sb.from("werke").delete().eq("id", w.id);
+  if (error) throw new Error(dbErr(error));
+  await removeFiles([w.foto_pfad, w.thumb_pfad]);
+}
+/* Kleine Einstellungen (Sortierung, Datum der letzten Sicherung) bleiben auf dem jeweiligen Gerät */
+const getSetting = async k => { try { const v = localStorage.getItem("bk_" + k); return v == null ? undefined : JSON.parse(v); } catch(_){ return undefined; } };
+const setSetting = async (k,v) => { try { localStorage.setItem("bk_" + k, JSON.stringify(v)); } catch(_){} };
+
+/* ================= Hilfsfunktionen ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2));
+const collator = new Intl.Collator("de", {numeric:true, sensitivity:"base"});
+const fmtPreis = p => (p === "" || p == null || isNaN(p)) ? "" : Number(p).toLocaleString("de-DE",{style:"currency",currency:"EUR"});
+const fmtNum = n => (n === "" || n == null) ? "" : String(n).replace(".", ",");
+function masse(w){
+  const parts = [w.hoehe, w.breite].filter(x => x !== "" && x != null).map(fmtNum);
+  if (!parts.length) return "";
+  let s = parts.join(" × ");
+  if (w.tiefe !== "" && w.tiefe != null) s += " × " + fmtNum(w.tiefe);
+  return s + " cm" + (parts.length === 2 ? " (H × B" + (w.tiefe ? " × T" : "") + ")" : "");
+}
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"), 2600); }
+function busy(msg){ $("#busy").classList.toggle("hidden", !msg); if (msg) $("#busyText").textContent = msg; }
+const urlCache = new Map();
+function blobURL(key, blob){ if (!blob) return ""; let u = urlCache.get(key); if (!u || u.blob !== blob){ if (u) URL.revokeObjectURL(u.url); u = {blob, url:URL.createObjectURL(blob)}; urlCache.set(key,u);} return u.url; }
+
+/* Foto verkleinern: Original kann viele MB haben. Gespeichert wird max. 2000 px (Ansicht) + 320 px (Vorschau). */
+const isHeic = f => /heic|heif/i.test(f.type || "") || /\.(heic|heif)$/i.test(f.name || "");
+const HEIC_MSG = "Dieses Foto ist im iPhone-Format HEIC gespeichert. Das kann dieser Browser leider nicht lesen. " +
+  "Lösung: Foto als JPG speichern (z. B. in der Windows-App „Fotos“ öffnen → „Speichern unter“ → JPG) oder am iPhone unter " +
+  "Einstellungen → Kamera → Formate „Maximale Kompatibilität“ wählen, dann nimmt es künftig JPG auf.";
+function loadImage(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => { res(img); setTimeout(()=>URL.revokeObjectURL(url), 1000); };
+    img.onerror = () => { URL.revokeObjectURL(url);
+      rej(new Error(isHeic(file) ? HEIC_MSG : "Diese Datei konnte nicht als Bild gelesen werden (" + (file.name || file.type || "unbekannt") + "). Bitte ein JPG- oder PNG-Foto verwenden.")); };
+    img.src = url;
+  });
+}
+function scale(img, max, q){
+  const r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * r); c.height = Math.round(img.naturalHeight * r);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(res => c.toBlob(res, "image/jpeg", q));
+}
+async function processPhoto(file){
+  const img = await loadImage(file);
+  return { foto: await scale(img, 2000, 0.85), thumb: await scale(img, 320, 0.8) };
+}
+const blobToDataURL = b => new Promise((res, rej) => { if(!b) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+async function dataURLToBlob(u){ if (!u) return null; return await (await fetch(u)).blob(); }
+
+/* ================= Vorschlagslisten ================= */
+const TECHNIKEN = ["Öl","Acryl","Aquarell","Gouache","Pastell (Öl)","Pastell (Trocken)","Tusche","Kohle","Bleistift","Mischtechnik","Collage","Spachteltechnik"];
+const UNTERGRUENDE = ["Leinwand auf Keilrahmen","Leinwand auf Malkarton","Malpappe","Aquarellpapier","Zeichenpapier","Holz","MDF-Platte","Hartfaser","Leinen"];
+const SIG_POS = ["unten rechts","unten links","oben rechts","oben links","Rückseite","unsigniert"];
+
+/* ================= Zustand ================= */
+let werke = [];
+let state = { view:"list", sort:"werknummer", filter:"alle", q:"" };
+let wiz = null; // { data, step, editing }
+
+async function reload(){ werke = await getAll(); }
+
+function sorted(list){
+  const byNr = (a,b) => collator.compare(a.werknummer||"", b.werknummer||"");
+  const byJahr = (a,b) => (Number(a.jahr)||0) - (Number(b.jahr)||0);
+  return [...list].sort(state.sort === "jahr" ? ((a,b)=> byJahr(a,b) || byNr(a,b))
+                      : state.sort === "jahr-ab" ? ((a,b)=> byJahr(b,a) || byNr(a,b))
+                      : ((a,b)=> byNr(a,b) || byJahr(a,b)));
+}
+
+/* ================= Router ================= */
+function go(view, arg){
+  state.view = view; state.arg = arg;
+  $("#backBtn").classList.toggle("hidden", view === "list");
+  $("#addBtn").classList.toggle("hidden", view !== "list");
+  window.scrollTo(0,0);
+  render();
+}
+$("#backBtn").onclick = () => {
+  if (state.view === "wizard" && !confirm("Erfassung abbrechen? Nicht gespeicherte Eingaben gehen verloren.")) return;
+  if (state.view === "wizard" && wiz && wiz.editing) return go("detail", wiz.data.id);
+  go("list");
+};
+$("#settingsBtn").onclick = () => { if (state.view === "wizard" && !confirm("Erfassung abbrechen?")) return; go("settings"); };
+$("#addBtn").onclick = () => startWizard();
+
+function render(){
+  const v = $("#view");
+  if (state.view === "list") return renderList(v);
+  if (state.view === "detail") return renderDetail(v, state.arg);
+  if (state.view === "wizard") return renderWizard(v);
+  if (state.view === "settings") return renderSettings(v);
+}
+
+/* ================= Liste ================= */
+function renderList(v){
+  $("#title").textContent = "Bilderkatalog";
+  const q = state.q.trim().toLowerCase();
+  let list = werke.filter(w => state.filter === "alle" || w.status === state.filter);
+  if (q) list = list.filter(w => [w.titel,w.werknummer,w.jahr,w.technik,w.untergrund,w.besitzer,w.kuenstler].join(" ").toLowerCase().includes(q));
+  list = sorted(list);
+  const verkauft = werke.filter(w => w.status === "verkauft").length;
+  v.innerHTML = `
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Suchen (Titel, Nr., Technik …)" value="${esc(state.q)}">
+      <select id="sort" aria-label="Sortierung">
+        <option value="werknummer">Nach Werknummer</option>
+        <option value="jahr">Nach Jahr (alt → neu)</option>
+        <option value="jahr-ab">Nach Jahr (neu → alt)</option>
+      </select>
+      <select id="filter" aria-label="Filter">
+        <option value="alle">Alle</option>
+        <option value="verfuegbar">Nicht verkauft</option>
+        <option value="verkauft">Verkauft</option>
+      </select>
+    </div>
+    <div class="stats">${werke.length} Werk${werke.length===1?"":"e"} · ${verkauft} verkauft${list.length!==werke.length?` · ${list.length} angezeigt`:""}</div>
+    <div class="list" id="list"></div>`;
+  $("#sort").value = state.sort; $("#filter").value = state.filter;
+  $("#q").oninput = e => { state.q = e.target.value; const pos = e.target.selectionStart; renderList(v); const n=$("#q"); n.focus(); n.setSelectionRange(pos,pos); };
+  $("#sort").onchange = e => { state.sort = e.target.value; setSetting("sort", state.sort); renderList(v); };
+  $("#filter").onchange = e => { state.filter = e.target.value; renderList(v); };
+  const L = $("#list");
+  if (!werke.length){
+    L.innerHTML = `<div class="empty"><div class="big">🖼️</div><p>Noch keine Bilder im Katalog.</p><button class="btn primary" id="first">Erstes Bild erfassen</button></div>`;
+    $("#first").onclick = () => startWizard(); return;
+  }
+  if (!list.length){ L.innerHTML = `<div class="empty">Keine Treffer.</div>`; return; }
+  L.innerHTML = list.map(w => `
+    <button class="item" data-id="${esc(w.id)}">
+      ${w._thumbURL ? `<img class="thumb" src="${esc(w._thumbURL)}" alt="" loading="lazy">` : `<div class="thumb">🖼️</div>`}
+      <div class="meta">
+        <div class="t">${esc(w.titel || "Ohne Titel")}</div>
+        <div class="s">${esc([w.werknummer && "Nr. "+w.werknummer, w.jahr, w.technik].filter(Boolean).join(" · "))}</div>
+        <div class="s">${esc(masse(w))}</div>
+      </div>
+      <span class="badge ${w.status}">${w.status==="verkauft"?"verkauft":"verfügbar"}</span>
+    </button>`).join("");
+  L.querySelectorAll(".item").forEach(b => b.onclick = () => go("detail", b.dataset.id));
+}
+
+/* ================= Detail ================= */
+function fieldRows(w){
+  const sig = [w.signaturPos, w.signatur].filter(Boolean).join(": ");
+  return [
+    ["Künstler/in", w.kuenstler], ["Titel", w.titel], ["Werknummer", w.werknummer], ["Entstehungsjahr", w.jahr],
+    ["Maße", masse(w)], ["Maltechnik", w.technik], ["Maluntergrund", w.untergrund], ["Materialien", w.materialien],
+    ["Signatur", sig], ["Status", w.status==="verkauft"?"verkauft":"nicht verkauft"],
+    ["Preis", fmtPreis(w.preis)], ...(w.status==="verkauft" ? [["Neuer Besitzer", w.besitzer]] : []),
+    ["Notizen", w.notizen]
+  ];
+}
+function renderDetail(v, id){
+  const w = werke.find(x => x.id === id); if (!w) return go("list");
+  $("#title").textContent = w.werknummer ? "Nr. " + w.werknummer : "Werk";
+  v.innerHTML = `<div class="detail">
+    ${w.foto_pfad ? `<img class="hero" id="hero" alt="${esc(w.titel)}" src="${esc(w._thumbURL || "")}">` : ""}
+    <div class="card">
+      <h2 style="margin:0 0 12px">${esc(w.titel || "Ohne Titel")}</h2>
+      <dl class="fields">${fieldRows(w).map(([k,val]) => `<dt>${k}</dt><dd>${esc(val) || "<span style='color:var(--muted)'>–</span>"}</dd>`).join("")}</dl>
+      <div class="row">
+        <button class="btn primary" id="edit">Bearbeiten</button>
+        <button class="btn" id="dup" title="Neues Bild mit denselben Angaben zu Technik, Untergrund usw. beginnen">Als Vorlage verwenden</button>
+        <button class="btn danger" id="del">Löschen</button>
+      </div>
+    </div></div>`;
+  if (w.foto_pfad) signedURL(w.foto_pfad).then(u => { const h = $("#hero"); if (h && u) h.src = u; });
+  $("#edit").onclick = () => startWizard(w, true);
+  $("#dup").onclick = () => { const {id, foto_pfad, thumb_pfad, _thumbURL, titel, werknummer, status, besitzer, preis, erstellt, geaendert, ...rest} = w; startWizard({...rest}, false); };
+  $("#del").onclick = async () => {
+    if (!confirm(`„${w.titel || "Ohne Titel"}“ wirklich löschen? Das kann nicht rückgängig gemacht werden.`)) return;
+    busy("Wird gelöscht …");
+    try { await delWerk(w); await reload(); toast("Gelöscht"); go("list"); }
+    catch(err){ alert("Löschen fehlgeschlagen: " + err.message); }
+    finally { busy(""); }
+  };
+}
+
+/* ================= Geführte Erfassung ================= */
+const STEPS = [
+  { key:"foto", title:"Foto", hint:"Fotografiere das Bild möglichst gerade, bei Tageslicht und ohne Blitz. Du kannst das Foto auch später hinzufügen.",
+    html: d => `<label class="photo-drop" id="pd" for="fotoIn">${d._fotoURL ? `<img src="${d._fotoURL}" alt="">` : `<div style="font-size:2.4rem">📷</div>`}
+      <div><b>${d._fotoURL ? "Anderes Foto wählen" : "Hier klicken, um ein Foto auszuwählen"}</b></div>
+      <div style="color:var(--muted);font-size:.88rem;margin-top:4px">oder Foto hierher ziehen · oder mit Strg+V einfügen</div></label>
+      <input type="file" id="fotoIn" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div class="err" id="fotoErr"></div>
+      ${d._fotoURL ? `<div class="row"><button type="button" class="btn ghost" id="fotoDel">Foto entfernen</button></div>` : ""}`,
+    bind: d => {
+      const pd = $("#pd");
+      const take = async f => {
+        if (!f) return;
+        $("#fotoErr").textContent = "";
+        pd.innerHTML = "Foto wird verarbeitet …";
+        try { const r = await processPhoto(f); d._neuFoto = r.foto; d._neuThumb = r.thumb; d._fotoWeg = false; d._fotoURL = URL.createObjectURL(r.foto); renderWizard($("#view")); }
+        catch(err){ const msg = err && err.message ? err.message : String(err); renderWizard($("#view")); $("#fotoErr").textContent = msg; }
+      };
+      $("#fotoIn").onchange = e => { const f = e.target.files[0]; e.target.value = ""; take(f); };
+      pd.ondragover = e => { e.preventDefault(); pd.style.borderColor = "var(--accent)"; };
+      pd.ondragleave = () => { pd.style.borderColor = ""; };
+      pd.ondrop = e => { e.preventDefault(); pd.style.borderColor = ""; take(e.dataTransfer.files[0]); };
+      document.onpaste = e => {
+        if (state.view !== "wizard" || !wiz || STEPS[wiz.step].key !== "foto") return;
+        const it = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.type.startsWith("image/"));
+        if (it){ e.preventDefault(); take(it.getAsFile()); }
+      };
+      const fd = $("#fotoDel"); if (fd) fd.onclick = () => { d._neuFoto = null; d._neuThumb = null; d._fotoWeg = true; d._fotoURL = null; renderWizard($("#view")); };
+    } },
+  { key:"titel", title:"Titel und Künstler/in", hint:"Wie heißt das Bild? Ohne Titel geht auch – dann wird „Ohne Titel“ angezeigt.",
+    html: d => `<label class="f" for="titel">Titel</label><input type="text" id="titel" value="${esc(d.titel)}" placeholder="z. B. Sommerwiese">
+      <label class="f" for="kuenstler">Künstler/in <small>(wird für das nächste Bild gemerkt)</small></label><input type="text" id="kuenstler" value="${esc(d.kuenstler)}">`,
+    read: d => { d.titel = $("#titel").value.trim(); d.kuenstler = $("#kuenstler").value.trim(); } },
+  { key:"nummer", title:"Werknummer und Entstehungsjahr", hint:"Die Werknummer muss eindeutig sein. Ein Vorschlag ist schon eingetragen – du kannst ihn ändern.",
+    html: d => `<label class="f" for="werknummer">Werknummer</label><input type="text" id="werknummer" value="${esc(d.werknummer)}" autocapitalize="off">
+      <label class="f" for="jahr">Entstehungsjahr</label><input type="number" id="jahr" inputmode="numeric" min="1900" max="2100" value="${esc(d.jahr)}">`,
+    read: d => { d.werknummer = $("#werknummer").value.trim(); d.jahr = $("#jahr").value.trim(); },
+    check: d => {
+      if (!d.werknummer) return "Bitte eine Werknummer eintragen.";
+      const dup = werke.find(w => w.id !== d.id && (w.werknummer||"").toLowerCase() === d.werknummer.toLowerCase());
+      if (dup) return `Die Werknummer ${d.werknummer} ist schon vergeben („${dup.titel || "Ohne Titel"}“).`;
+      if (d.jahr && (d.jahr < 1900 || d.jahr > new Date().getFullYear() + 1)) return "Das Jahr scheint nicht zu stimmen.";
+    } },
+  { key:"masse", title:"Maße", hint:"In Zentimetern. Tiefe ist optional (z. B. Keilrahmenstärke).",
+    html: d => `<div class="grid3">
+      <div><label class="f" for="hoehe">Höhe</label><input type="number" id="hoehe" inputmode="decimal" step="0.1" min="0" value="${esc(d.hoehe)}"></div>
+      <div><label class="f" for="breite">Breite</label><input type="number" id="breite" inputmode="decimal" step="0.1" min="0" value="${esc(d.breite)}"></div>
+      <div><label class="f" for="tiefe">Tiefe</label><input type="number" id="tiefe" inputmode="decimal" step="0.1" min="0" value="${esc(d.tiefe)}"></div></div>`,
+    read: d => { d.hoehe = $("#hoehe").value; d.breite = $("#breite").value; d.tiefe = $("#tiefe").value; } },
+  { key:"technik", title:"Maltechnik", hint:"Tippe einen Vorschlag an oder schreibe selbst.",
+    html: d => `<input type="text" id="technik" value="${esc(d.technik)}" placeholder="z. B. Acryl">
+      <div class="chips">${chips(TECHNIKEN, d.technik)}</div>`,
+    bind: () => bindChips("technik"), read: d => { d.technik = $("#technik").value.trim(); } },
+  { key:"untergrund", title:"Maluntergrund", hint:"Worauf ist das Bild gemalt?",
+    html: d => `<input type="text" id="untergrund" value="${esc(d.untergrund)}" placeholder="z. B. Leinwand auf Keilrahmen">
+      <div class="chips">${chips(UNTERGRUENDE, d.untergrund)}</div>`,
+    bind: () => bindChips("untergrund"), read: d => { d.untergrund = $("#untergrund").value.trim(); } },
+  { key:"materialien", title:"Materialien", hint:"Welche Farben, Hilfsmittel oder Zusätze hast du verwendet? (z. B. Strukturpaste, Blattgold, Firnis)",
+    html: d => `<textarea id="materialien" placeholder="Freitext">${esc(d.materialien)}</textarea>`,
+    read: d => { d.materialien = $("#materialien").value.trim(); } },
+  { key:"signatur", title:"Signatur", hint:"Wo und wie ist das Bild signiert?",
+    html: d => `<label class="f">Position</label><div class="chips" id="sigpos">${SIG_POS.map(p => `<button type="button" class="chip ${d.signaturPos===p?"on":""}" data-v="${p}">${p}</button>`).join("")}</div>
+      <label class="f" for="signatur">Wortlaut <small>(z. B. Name und Jahr, Monogramm)</small></label><input type="text" id="signatur" value="${esc(d.signatur)}">`,
+    bind: d => { document.querySelectorAll("#sigpos .chip").forEach(c => c.onclick = () => {
+      d.signaturPos = d.signaturPos === c.dataset.v ? "" : c.dataset.v;
+      document.querySelectorAll("#sigpos .chip").forEach(x => x.classList.toggle("on", x.dataset.v === d.signaturPos)); }); },
+    read: d => { d.signatur = $("#signatur").value.trim(); } },
+  { key:"status", title:"Status und Preis", hint:"Ist das Bild schon verkauft?",
+    html: d => `<div class="seg" id="seg">
+        <button type="button" data-v="verfuegbar" class="${d.status!=="verkauft"?"on":""}">Nicht verkauft</button>
+        <button type="button" data-v="verkauft" class="${d.status==="verkauft"?"on":""}">Verkauft</button></div>
+      <label class="f" for="preis">${d.status==="verkauft"?"Verkaufspreis":"Preis"} <small>(in Euro, optional)</small></label>
+      <input type="number" id="preis" inputmode="decimal" step="1" min="0" value="${esc(d.preis)}">
+      <div id="bes" class="${d.status==="verkauft"?"":"hidden"}">
+        <label class="f" for="besitzer">Neuer Besitzer</label><input type="text" id="besitzer" value="${esc(d.besitzer)}" placeholder="Name, ggf. Ort">
+      </div>`,
+    bind: d => { document.querySelectorAll("#seg button").forEach(b => b.onclick = () => {
+      d.preis = $("#preis").value; d.besitzer = $("#besitzer").value; d.status = b.dataset.v; renderWizard($("#view")); }); },
+    read: d => { d.preis = $("#preis").value; d.besitzer = d.status === "verkauft" ? $("#besitzer").value.trim() : ""; } },
+  { key:"notizen", title:"Notizen", hint:"Optional: Ausstellungen, Inspiration, Besonderheiten.",
+    html: d => `<textarea id="notizen">${esc(d.notizen)}</textarea>`,
+    read: d => { d.notizen = $("#notizen").value.trim(); } },
+  { key:"fertig", title:"Zusammenfassung", hint:"Bitte prüfen. Mit „ändern“ springst du direkt zum jeweiligen Schritt.", summary:true }
+];
+const STEP_OF = {"Künstler/in":1,"Titel":1,"Werknummer":2,"Entstehungsjahr":2,"Maße":3,"Maltechnik":4,"Maluntergrund":5,"Materialien":6,"Signatur":7,"Status":8,"Preis":8,"Neuer Besitzer":8,"Notizen":9};
+
+function chips(list, cur){ return list.map(t => `<button type="button" class="chip ${cur===t?"on":""}" data-v="${esc(t)}">${esc(t)}</button>`).join(""); }
+function bindChips(id){
+  const inp = $("#"+id);
+  document.querySelectorAll(".chips .chip").forEach(c => c.onclick = () => {
+    inp.value = c.dataset.v;
+    document.querySelectorAll(".chips .chip").forEach(x => x.classList.toggle("on", x === c));
+  });
+  inp.oninput = () => document.querySelectorAll(".chips .chip").forEach(x => x.classList.toggle("on", x.dataset.v === inp.value));
+}
+
+function nextWerknummer(){
+  // Vorschlag: höchste rein numerische Endziffer + 1, Format der letzten Nummer beibehalten
+  const nrs = werke.map(w => w.werknummer || "").filter(Boolean);
+  if (!nrs.length) return "001";
+  const last = nrs.sort(collator.compare).at(-1);
+  const m = last.match(/^(.*?)(\d+)(\D*)$/);
+  if (!m) return "";
+  const n = String(Number(m[2]) + 1).padStart(m[2].length, "0");
+  return m[1] + n + m[3];
+}
+
+async function startWizard(base, editing){
+  const zuletzt = [...werke].sort((a,b) => String(b.geaendert||"").localeCompare(String(a.geaendert||"")))[0];
+  const kuenstler = await getSetting("kuenstler") || (zuletzt && zuletzt.kuenstler) || "";
+  const data = editing ? {...base} : {
+    id: uid(), kuenstler, titel:"", jahr: String(new Date().getFullYear()), hoehe:"", breite:"", tiefe:"",
+    technik:"", untergrund:"", materialien:"", werknummer: nextWerknummer(), signaturPos:"", signatur:"",
+    status:"verfuegbar", preis:"", besitzer:"", notizen:"", foto_pfad:null, thumb_pfad:null, ...(base||{})
+  };
+  if (!editing && base) { data.id = uid(); data.werknummer = nextWerknummer(); data.kuenstler = base.kuenstler || kuenstler; }
+  delete data._thumbURL;
+  data._fotoURL = editing && data.foto_pfad ? (await signedURL(data.foto_pfad)) || null : null;
+  wiz = { data, step: editing ? STEPS.length - 1 : 0, editing: !!editing, jumped:false };
+  go("wizard");
+}
+
+function renderWizard(v){
+  const d = wiz.data, s = STEPS[wiz.step], n = STEPS.length;
+  $("#title").textContent = wiz.editing ? "Bearbeiten" : "Neues Bild";
+  const body = s.summary
+    ? `<dl class="fields">${fieldRows(d).map(([k,val]) => `<dt>${k}</dt><dd>${esc(val) || "<span style='color:var(--muted)'>–</span>"}<a data-s="${STEP_OF[k]}">ändern</a></dd>`).join("")}
+        <dt>Foto</dt><dd>${d._fotoURL ? "vorhanden" : "<span style='color:var(--muted)'>kein Foto</span>"}<a data-s="0">ändern</a></dd></dl>
+       ${d._fotoURL ? `<img src="${d._fotoURL}" alt="" style="max-width:160px;border-radius:10px;margin-top:12px">` : ""}`
+    : s.html(d);
+  v.innerHTML = `<div class="card wiz summary">
+    <div class="progress"><div style="width:${Math.round((wiz.step+1)/n*100)}%"></div></div>
+    <div class="stepinfo">Schritt ${wiz.step+1} von ${n}</div>
+    <h2>${s.title}</h2><p class="hint">${s.hint}</p>
+    <form id="wf" autocomplete="off">${body}<div class="err" id="err"></div>
+    <div class="wiznav">
+      ${wiz.step > 0 ? `<button type="button" class="btn" id="prev">Zurück</button>` : ""}
+      ${!s.summary && wiz.jumped ? `<button type="button" class="btn" id="tosum">Zur Übersicht</button>` : ""}
+      <button type="submit" class="btn primary" id="next">${s.summary ? "Speichern" : "Weiter"}</button>
+    </div></form></div>`;
+  if (s.bind) s.bind(d);
+  const first = v.querySelector("input[type=text],input[type=number],textarea"); if (first && !("ontouchstart" in window)) first.focus();
+  const leave = () => { if (s.read) s.read(d); if (s.check){ const e = s.check(d); if (e){ $("#err").textContent = e; return false; } } return true; };
+  $("#wf").onsubmit = async e => {
+    e.preventDefault();
+    if (s.summary) return save();
+    if (!leave()) return;
+    wiz.step = wiz.jumped ? n - 1 : wiz.step + 1; renderWizard(v); window.scrollTo(0,0);
+  };
+  const p = $("#prev"); if (p) p.onclick = () => { if (s.read) s.read(d); wiz.step--; renderWizard(v); };
+  const ts = $("#tosum"); if (ts) ts.onclick = () => { if (!leave()) return; wiz.step = n - 1; renderWizard(v); };
+  v.querySelectorAll("a[data-s]").forEach(a => a.onclick = () => { wiz.step = Number(a.dataset.s); wiz.jumped = true; renderWizard(v); });
+}
+
+async function save(){
+  const d = wiz.data;
+  const chk = STEPS[2].check(d);
+  if (chk){ wiz.step = 2; renderWizard($("#view")); $("#err").textContent = chk; return; }
+  const {_fotoURL, _neuFoto, _neuThumb, _fotoWeg, ...w} = d;
+  if (!w.erstellt) w.erstellt = new Date().toISOString();
+  w.geaendert = new Date().toISOString();
+  busy(_neuFoto ? "Foto wird hochgeladen und gespeichert …" : "Wird gespeichert …");
+  try { await putWerk(w, {foto:_neuFoto, thumb:_neuThumb, fotoWeg:_fotoWeg}); }
+  catch(err){ busy(""); alert("Speichern fehlgeschlagen: " + err.message + "\n\nDeine Eingaben sind noch da. Bitte später noch einmal auf „Speichern“ tippen."); return; }
+  if (w.kuenstler) await setSetting("kuenstler", w.kuenstler);
+  try { await reload(); } catch(_){}
+  busy("");
+  toast(wiz.editing ? "Änderungen gespeichert" : "Bild gespeichert");
+  const id = w.id; wiz = null; go("detail", id);
+  maybeRemindBackup();
+}
+
+/* ================= Datensicherung ================= */
+async function exportJSON(){
+  const out = []; const list = sorted(werke);
+  try {
+    for (let i = 0; i < list.length; i++){
+      busy(`Sicherung wird erstellt … Foto ${i+1} von ${list.length}`);
+      const {foto_pfad, thumb_pfad, _thumbURL, ...rest} = list[i];
+      let foto = null;
+      if (foto_pfad){
+        const { data, error } = await sb.storage.from(BUCKET).download(foto_pfad);
+        if (error) throw new Error("Foto von „" + (rest.titel || rest.werknummer) + "“ konnte nicht geladen werden: " + dbErr(error));
+        foto = await blobToDataURL(data);
+      }
+      out.push({...rest, foto});
+    }
+  } catch(err){ busy(""); alert("Sicherung fehlgeschlagen: " + err.message); return; }
+  busy("");
+  const json = JSON.stringify({ app:"Bilderkatalog", format:1, exportiert:new Date().toISOString(), anzahl:out.length, werke:out });
+  const name = `Bilderkatalog-Sicherung-${new Date().toISOString().slice(0,10)}.json`;
+  download(new Blob([json], {type:"application/json"}), name);
+  await setSetting("lastBackup", new Date().toISOString());
+  render();
+}
+function exportCSV(){
+  const cols = [["werknummer","Werknummer"],["titel","Titel"],["kuenstler","Künstler/in"],["jahr","Jahr"],["hoehe","Höhe cm"],["breite","Breite cm"],["tiefe","Tiefe cm"],
+    ["technik","Maltechnik"],["untergrund","Maluntergrund"],["materialien","Materialien"],["signaturPos","Signatur Position"],["signatur","Signatur"],
+    ["status","Status"],["preis","Preis EUR"],["besitzer","Neuer Besitzer"],["notizen","Notizen"]];
+  const cell = v => { v = String(v ?? "").replace(/\r?\n/g," "); return /[";]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v; };
+  const rows = [cols.map(c=>c[1]).join(";")].concat(sorted(werke).map(w => cols.map(([k]) =>
+    cell(k==="status" ? (w.status==="verkauft"?"verkauft":"nicht verkauft") : ["hoehe","breite","tiefe","preis"].includes(k) ? fmtNum(w[k]) : w[k])).join(";")));
+  download(new Blob(["﻿"+rows.join("\r\n")], {type:"text/csv;charset=utf-8"}), `Bilderkatalog-Liste-${new Date().toISOString().slice(0,10)}.csv`);
+}
+function download(blob, name){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+/* Einlesen einer Sicherung (auch aus der alten Version der App, die nur im Browser gespeichert hat) */
+$("#importFile").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  let data;
+  try {
+    data = JSON.parse(await f.text());
+    if (data.app !== "Bilderkatalog" || !Array.isArray(data.werke)) throw new Error("Das ist keine Bilderkatalog-Sicherung.");
+  } catch(err){ alert("Einlesen fehlgeschlagen: " + err.message); return; }
+  const ids = new Map(werke.map(w => [w.id, w]));
+  const nrs = new Map(werke.map(w => [(w.werknummer||"").toLowerCase(), w]));
+  const neu = data.werke.filter(w => !ids.has(w.id)).length, alt = data.werke.length - neu;
+  if (!confirm(`Sicherung vom ${new Date(data.exportiert).toLocaleString("de-DE")} mit ${data.werke.length} Werken einlesen?\n\n${neu} neu, ${alt} schon vorhanden (diese werden mit dem Stand der Sicherung überschrieben).\nWerke, die nur online sind, bleiben erhalten.\n\nBitte das Fenster offen lassen, bis „fertig“ erscheint.`)) return;
+  const fehler = []; let ok = 0;
+  for (let i = 0; i < data.werke.length; i++){
+    const src = data.werke[i];
+    busy(`Werk ${i+1} von ${data.werke.length} wird hochgeladen …`);
+    try {
+      const {foto, thumb, ...rest} = src;
+      const w = { kuenstler:"", titel:"", jahr:"", hoehe:"", breite:"", tiefe:"", technik:"", untergrund:"", materialien:"",
+        signaturPos:"", signatur:"", status:"verfuegbar", preis:"", besitzer:"", notizen:"", ...rest };
+      if (!w.id || !/^[0-9a-f-]{36}$/i.test(w.id)) w.id = uid();
+      if (!w.werknummer) w.werknummer = "ohne-Nr-" + (i+1);
+      const gleicheNr = nrs.get(w.werknummer.toLowerCase());
+      if (gleicheNr && gleicheNr.id !== w.id) throw new Error(`Werknummer ${w.werknummer} ist online schon für „${gleicheNr.titel || "Ohne Titel"}“ vergeben`);
+      const vorhanden = ids.get(w.id);
+      if (vorhanden){ w.foto_pfad = vorhanden.foto_pfad; w.thumb_pfad = vorhanden.thumb_pfad; }
+      let opts = {};
+      if (foto){
+        const img = await loadImage(await dataURLToBlob(foto));
+        opts = { foto: await scale(img, 2000, 0.85), thumb: await scale(img, 320, 0.8) };
+      }
+      await putWerk(w, opts); ok++;
+    } catch(err){ fehler.push(`• ${src.werknummer || "?"} ${src.titel ? "„"+src.titel+"“" : ""}: ${err.message}`); }
+  }
+  try { await reload(); } catch(_){}
+  busy(""); go("list");
+  if (fehler.length) alert(`${ok} Werke eingelesen. ${fehler.length} nicht eingelesen:\n\n` + fehler.join("\n"));
+  else toast(`Fertig: ${ok} Werke eingelesen`);
+};
+async function maybeRemindBackup(){
+  const last = await getSetting("lastBackup");
+  const days = last ? (Date.now() - new Date(last)) / 864e5 : Infinity;
+  if (werke.length >= 3 && days > 60) setTimeout(() => toast("Tipp: Mach ab und zu eine Sicherung auf deinen Computer (⚙︎ oben rechts)."), 2800);
+}
+
+async function renderSettings(v){
+  $("#title").textContent = "Einstellungen";
+  const last = await getSetting("lastBackup");
+  v.innerHTML = `<div class="card">
+    <h3 style="margin-top:0">Wo sind meine Daten?</h3>
+    <div class="note">Alle Bilder und Angaben liegen in deiner privaten Online-Datenbank. Computer und iPhone zeigen denselben Stand, sobald du angemeldet bist.
+    Eine Sicherung auf deinen Computer ist trotzdem sinnvoll, z. B. alle paar Monate.</div>
+    <p style="color:var(--muted);font-size:.9rem">Angemeldet als ${esc(user && user.email)} · ${werke.length} Werke · Letzte Sicherung auf diesem Gerät: ${last ? new Date(last).toLocaleString("de-DE") : "noch nie"}</p>
+    <h3>Sichern</h3>
+    <div class="row" style="margin-top:0">
+      <button class="btn primary" id="exp" ${werke.length?"":"disabled"}>Komplette Sicherung (mit Fotos)</button>
+      <button class="btn" id="csv" ${werke.length?"":"disabled"}>Liste für Excel (CSV, ohne Fotos)</button>
+    </div>
+    <h3>Sicherung einlesen</h3>
+    <p style="margin-top:0">Liest eine Sicherungsdatei ein, auch die aus der alten Version, die nur im Browser gespeichert hat. Die Werke werden in die Online-Datenbank hochgeladen.</p>
+    <button class="btn" id="imp">Sicherung einlesen …</button>
+    <h3>Abmelden</h3>
+    <p style="margin-top:0">Nur nötig auf fremden oder geteilten Geräten.</p>
+    <button class="btn" id="logout">Abmelden</button>
+  </div>`;
+  $("#exp").onclick = exportJSON; $("#csv").onclick = exportCSV; $("#imp").onclick = () => $("#importFile").click();
+  $("#logout").onclick = async () => { if (!confirm("Wirklich abmelden?")) return; await sb.auth.signOut(); location.reload(); };
+}
+
+/* Verhindert, dass ein versehentlich daneben fallengelassenes Foto die App verlässt */
+window.addEventListener("error", e => toast("Fehler: " + (e.message || "unbekannt")));
+window.addEventListener("unhandledrejection", e => toast("Fehler: " + ((e.reason && e.reason.message) || e.reason)));
+window.addEventListener("dragover", e => e.preventDefault());
+window.addEventListener("drop", e => e.preventDefault());
+
+/* ================= Anmeldung ================= */
+function showLogin(msg){
+  $("#title").textContent = "Bilderkatalog";
+  $("#addBtn").classList.add("hidden"); $("#backBtn").classList.add("hidden"); $("#settingsBtn").classList.add("hidden");
+  $("#view").innerHTML = `<form class="card login" id="lf">
+    <h2 style="margin:0 0 6px">Anmelden</h2>
+    <p class="hint" style="color:var(--muted);margin:0 0 6px">Einmal pro Gerät. Danach bleibst du angemeldet.</p>
+    <label class="f" for="em">E-Mail</label><input type="email" id="em" autocomplete="username" required>
+    <label class="f" for="pw">Passwort</label><input type="password" id="pw" autocomplete="current-password" required>
+    <div class="err" id="lerr">${esc(msg || "")}</div>
+    <button class="btn primary" type="submit">Anmelden</button></form>`;
+  $("#lf").onsubmit = async e => {
+    e.preventDefault(); $("#lerr").textContent = ""; busy("Anmeldung …");
+    const { error } = await sb.auth.signInWithPassword({ email: $("#em").value.trim(), password: $("#pw").value });
+    busy("");
+    if (error){ $("#lerr").textContent = /invalid/i.test(error.message) ? "E-Mail oder Passwort stimmt nicht." : dbErr(error); return; }
+    start();
+  };
+}
+async function start(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return showLogin();
+  user = session.user;
+  $("#settingsBtn").classList.remove("hidden");
+  $("#view").innerHTML = `<div class="empty">Katalog wird geladen …</div>`;
+  try { await reload(); }
+  catch(err){
+    $("#view").innerHTML = `<div class="card"><h2>Katalog konnte nicht geladen werden</h2><p>${esc(err.message)}</p>
+      <p style="color:var(--muted)">Wenn die Datenbank länger nicht benutzt wurde, kann Supabase sie pausiert haben. Dann im Supabase-Dashboard das Projekt mit „Resume project“ wieder starten.</p>
+      <button class="btn primary" onclick="location.reload()">Noch einmal versuchen</button></div>`;
+    return;
+  }
+  go("list");
+}
+/* Wenn die App wieder in den Vordergrund kommt (z. B. iPhone), neuesten Stand holen */
+let lastLoad = Date.now();
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible" || !user || Date.now() - lastLoad < 30000) return;
+  if (state.view !== "list" && state.view !== "detail") return;
+  lastLoad = Date.now();
+  try { signedCache.clear(); await reload(); render(); } catch(_){}
+});
+
+/* ================= Start ================= */
+(async () => {
+  state.sort = await getSetting("sort") || "werknummer";
+  if (!sb){
+    $("#settingsBtn").classList.add("hidden"); $("#addBtn").classList.add("hidden");
+    $("#view").innerHTML = `<div class="card"><h2>Noch nicht eingerichtet</h2><p>Die Verbindung zur Online-Datenbank fehlt (Datei config.js). Bitte melde dich bei Claude.</p></div>`;
+    return;
+  }
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(()=>{});
+  start();
+})();
+</script>
+</body>
+</html>

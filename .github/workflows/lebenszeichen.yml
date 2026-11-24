@@ -1,0 +1,33 @@
+# Hält das kostenlose Supabase-Projekt aktiv: Supabase pausiert kostenlose Projekte
+# nach 7 Tagen ohne Datenbank-Nutzung. Dieser Wecker fragt alle 2 Tage eine harmlose
+# Funktion ab, die keine Daten preisgibt. URL und Schlüssel werden aus config.js gelesen.
+# Zusätzlich wird am 1. jedes Monats die Datei lebenszeichen.txt aktualisiert, weil GitHub
+# zeitgesteuerte Abläufe in öffentlichen Repositories nach 60 Tagen ohne Aktivität abschaltet.
+name: Lebenszeichen an Supabase
+on:
+  schedule:
+    - cron: "17 6 */2 * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Datenbank anfragen
+        run: |
+          URL=$(grep -oE 'url:\s*"[^"]+"' config.js | sed -E 's/.*"([^"]+)"/\1/')
+          KEY=$(grep -oE 'key:\s*"[^"]+"' config.js | sed -E 's/.*"([^"]+)"/\1/')
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js noch leer"; exit 0; fi
+          curl -sS --fail-with-body -X POST "$URL/rest/v1/rpc/lebenszeichen" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}'
+      - name: Monatlich Aktivität im Repository erzeugen
+        run: |
+          if [ "$(date -u +%d)" != "01" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then exit 0; fi
+          date -u +"%Y-%m-%d %H:%M UTC" > lebenszeichen.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lebenszeichen.txt
+          git commit -m "Monatliches Lebenszeichen" || exit 0
+          git push
