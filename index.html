@@ -142,7 +142,8 @@ function dbErr(error){
   const m = (error && (error.message || error.error_description)) || String(error);
   if (/duplicate key|werknummer_eindeutig/i.test(m)) return "Diese Werknummer ist schon vergeben.";
   if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return "Keine Internetverbindung oder die Datenbank ist gerade nicht erreichbar.";
-  if (/JWT|not authorized|row-level security|permission/i.test(m)) return "Keine Berechtigung – bitte neu anmelden.";
+  if (/JWT|not authorized|row-level security|permission|Unauthorized|403/i.test(m)) return "Keine Berechtigung (technische Meldung: " + m + ")";
+  if (/does not exist|Could not find the table|schema cache|Bucket not found/i.test(m)) return "Die Datenbank ist noch nicht vollständig eingerichtet (technische Meldung: " + m + ")";
   return m;
 }
 async function getAll(){

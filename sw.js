@@ -1,6 +1,6 @@
 /* Bilderkatalog – Service Worker: hält die App-Dateien bereit, holt aber immer zuerst die neueste Version.
    Daten und Fotos kommen nie aus diesem Zwischenspeicher, sondern immer direkt aus der Datenbank. */
-const CACHE = "bilderkatalog-v1";
+const CACHE = "bilderkatalog-v2";
 const SHELL = ["./", "index.html", "config.js", "supabase.js", "manifest.webmanifest", "icons/icon-192.png", "icons/apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => {
