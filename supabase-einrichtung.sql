@@ -32,6 +32,11 @@ create table if not exists public.werke (
 create unique index if not exists werke_werknummer_eindeutig
   on public.werke (user_id, lower(werknummer));
 
+-- Zugriff für angemeldete Nutzerinnen erlauben (neuere Supabase-Projekte vergeben das nicht mehr automatisch).
+-- Welche Zeilen sichtbar sind, regeln die Zugriffsregeln darunter.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on table public.werke to authenticated;
+
 -- 2) Zugriffsschutz: Jede angemeldete Person sieht und ändert nur ihre eigenen Werke.
 --    Ohne Anmeldung ist gar nichts sichtbar.
 alter table public.werke enable row level security;
